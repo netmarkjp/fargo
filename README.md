@@ -34,7 +34,7 @@ curl -F file=@somefile http://fargo.example.com:1236/push/<TOKEN>
 ## Get file from server
 
 ```
-curl -O http://fargo.example.com:1236/get/<TOKEN>
+curl -OJ http://fargo.example.com:1236/get/<TOKEN>
 ```
 
 # Specification
