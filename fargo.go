@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -27,7 +28,7 @@ func init() {
 		FargoPassword:  "fargo",
 		StoreDirectory: "/tmp",
 		TokenTTL:       300,
-		FileTTL:        3600,
+		FileTTL:        600,
 	}
 
 	tokens = &Tokens{token: make(map[string]*Token)}
@@ -208,6 +209,14 @@ func main() {
 	if debug {
 		log.SetLevel(log.DebugLevel)
 	}
+
+	config.Lock()
+	if envFileTTL, err := strconv.ParseInt(os.Getenv("FILE_TTL"), 10, 64); err == nil && envFileTTL != 0 {
+		config.FileTTL = envFileTTL
+	}
+	config.Unlock()
+
+	log.Debug("config: ", config)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/token", tokenHandler).Methods("GET")
