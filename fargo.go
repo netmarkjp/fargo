@@ -171,7 +171,8 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 func fileGC() {
 	for {
 		for k := range tokens.token {
-			if tokens.token[k].PushdAt.Add(time.Duration(config.FileTTL) * time.Second).Before(time.Now()) {
+			if tokens.token[k].PushdAt.After(tokens.token[k].CreatedAt) &&
+				tokens.token[k].PushdAt.Add(time.Duration(config.FileTTL)*time.Second).Before(time.Now()) {
 				log.Debug("file gc: clean up ", k)
 				filepath := StoreFilePath(k)
 				if err := os.Remove(filepath); err != nil {
