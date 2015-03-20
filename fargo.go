@@ -5,11 +5,13 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
+	"github.com/k0kubun/pp"
 	"github.com/satori/go.uuid"
 	"io"
 	"net"
 	"net/http"
 	"os"
+	"reflect"
 	"strconv"
 	"sync"
 	"time"
@@ -103,20 +105,31 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	filepath := StoreFilePath(token)
-	out, err := os.Create(filepath)
-	if err != nil {
-		log.Error(err)
-		w.WriteHeader(500)
-		return
-	}
-	defer out.Close()
+	tmpfile := reflect.ValueOf(header).Elem().FieldByName("tmpfile").String()
 
-	_, err = io.Copy(out, file)
-	if err != nil {
-		log.Error(err)
-		w.WriteHeader(500)
-		return
+	filepath := StoreFilePath(token)
+	if tmpfile == "" {
+		out, err := os.Create(filepath)
+		if err != nil {
+			log.Error(err)
+			w.WriteHeader(500)
+			return
+		}
+		defer out.Close()
+
+		_, err = io.Copy(out, file)
+		if err != nil {
+			log.Error(err)
+			w.WriteHeader(500)
+			return
+		}
+	} else {
+		err = os.Rename(tmpfile, filepath)
+		if err != nil {
+			log.Error(err)
+			w.WriteHeader(500)
+			return
+		}
 	}
 
 	tokens.token[token].Filename = header.Filename
@@ -216,7 +229,7 @@ func main() {
 	}
 	config.Unlock()
 
-	log.Debug("config: ", config)
+	log.Debug("config: ", pp.Sprint(config))
 
 	r := mux.NewRouter()
 	r.HandleFunc("/token", tokenHandler).Methods("GET")
