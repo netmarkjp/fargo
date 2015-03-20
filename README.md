@@ -49,6 +49,6 @@ curl -OJ http://fargo.example.com:1236/get/<TOKEN>
 - ``TOKEN`` is expired in 5 min by default.
     - can change with env ``TOKEN_TTL`` (min) *feature*
 - If get file fail, locked 30 seconds from same IP by default.
-- Pushed file will delete in 60 min by default.
-    - can change with env ``FILE_TTL`` (min) *feature*
+- Pushed file will delete in 600 sec(1h) by default.
+    - can change with env ``FILE_TTL`` (sec)
 
