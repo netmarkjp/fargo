@@ -5,7 +5,9 @@ build:
       - script: 
             code: "go get -t ./..."
             name: "go get"
-      - tcnksm/gox
+      - tcnksm/gox:
+            os: "darwin linux"
+            arch: "386 amd64"
       - tcnksm/zip:
           input: $WERCKER_OUTPUT_DIR/pkg
           output: $WERCKER_OUTPUT_DIR/dist
