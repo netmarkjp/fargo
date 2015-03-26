@@ -158,6 +158,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 	tokens.token[token].Filename = header.Filename
 	tokens.token[token].PushdAt = time.Now()
 	w.WriteHeader(200)
+	w.Write([]byte(token))
 }
 
 func getHandler(w http.ResponseWriter, r *http.Request) {
