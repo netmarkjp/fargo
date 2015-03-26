@@ -291,6 +291,17 @@ func main() {
 	if envFileTTL, err := strconv.ParseInt(os.Getenv("FILE_TTL"), 10, 64); err == nil && envFileTTL != 0 {
 		config.FileTTL = envFileTTL
 	}
+	if envStoreDirectory := os.Getenv("STORE_DIR"); envStoreDirectory != "" {
+		if _, err := os.Stat(envStoreDirectory); err != nil {
+			err := os.Mkdir(envStoreDirectory, 0777)
+			if err != nil {
+				log.Fatal("cannot create ", envStoreDirectory, " : ", err)
+				os.Exit(1)
+			}
+		}
+
+		config.StoreDirectory = envStoreDirectory
+	}
 	config.Unlock()
 
 	log.Debug("config: ", pp.Sprint(config))

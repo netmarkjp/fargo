@@ -56,7 +56,7 @@ curl -OJ http://fargo.example.com:1236/get/<TOKEN>
 - username/password for ``/token`` is ``fargo`` / ``fargo`` by default.
     - can change with env ``FARGO_USER`` and ``FARGO_PASSWORD``
 - File store directory is ``/tmp`` by default.
-    - can change with env ``STORE_DIR`` *feature*
+    - can change with env ``STORE_DIR``
 - ``TOKEN`` is UUIDv4
 - ``TOKEN`` is expired in 5 min by default.
     - can change with env ``TOKEN_TTL`` (min) *feature*
