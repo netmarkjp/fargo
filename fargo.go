@@ -120,6 +120,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 	if _, exist := tokens.token[token]; !exist {
 		log.Warn("token not found.", token)
 		w.WriteHeader(404)
+		w.Write([]byte("[ERROR] 404 Not Found"))
 		return
 	}
 	if tokens.token[token].CreatedAt.Add(time.Duration(config.TokenTTL) * time.Second).Before(time.Now()) {
@@ -127,6 +128,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 		log.Debug("token:", tokens.token[token])
 		log.Debug("expired at:", tokens.token[token].CreatedAt.Add(time.Duration(config.TokenTTL)*time.Second))
 		w.WriteHeader(403)
+		w.Write([]byte("[ERROR] 403 Forbidden"))
 		return
 	}
 
@@ -134,6 +136,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error(err)
 		w.WriteHeader(500)
+		w.Write([]byte("[ERROR] 500 Internal Server Error"))
 		return
 	}
 	defer file.Close()
@@ -146,6 +149,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err)
 			w.WriteHeader(500)
+			w.Write([]byte("[ERROR] 500 Internal Server Error"))
 			return
 		}
 		defer out.Close()
@@ -154,6 +158,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err)
 			w.WriteHeader(500)
+			w.Write([]byte("[ERROR] 500 Internal Server Error"))
 			return
 		}
 	} else {
@@ -161,6 +166,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err)
 			w.WriteHeader(500)
+			w.Write([]byte("[ERROR] 500 Internal Server Error"))
 			return
 		}
 	}
@@ -178,6 +184,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		if val.Add(30 * time.Second).After(time.Now()) {
 			log.Warn("access denied for failed IP.")
 			w.WriteHeader(403)
+			w.Write([]byte("[ERROR] 403 Forbidden"))
 			return
 		}
 	}
@@ -192,6 +199,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		failedIP.Unlock()
 		log.Debug("failedIP:", failedIP)
 		w.WriteHeader(404)
+		w.Write([]byte("[ERROR] 404 Not Found"))
 		return
 	}
 	if tokens.token[token].CreatedAt.Add(time.Duration(config.TokenTTL) * time.Second).Before(time.Now()) {
@@ -200,6 +208,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		failedIP.ip[addr] = time.Now()
 		failedIP.Unlock()
 		w.WriteHeader(403)
+		w.Write([]byte("[ERROR] 403 Forbidden"))
 		return
 	}
 
@@ -301,6 +310,9 @@ func main() {
 		}
 
 		config.StoreDirectory = envStoreDirectory
+	}
+	if envTokenTTL, err := strconv.ParseInt(os.Getenv("TOKEN_TTL"), 10, 64); err == nil && envTokenTTL != 0 {
+		config.TokenTTL = envTokenTTL
 	}
 	config.Unlock()
 

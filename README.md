@@ -59,7 +59,7 @@ curl -OJ http://fargo.example.com:1236/get/<TOKEN>
     - can change with env ``STORE_DIR``
 - ``TOKEN`` is UUIDv4
 - ``TOKEN`` is expired in 5 min by default.
-    - can change with env ``TOKEN_TTL`` (min) *feature*
+    - can change with env ``TOKEN_TTL`` (min)
 - If get file fail, locked 30 seconds from same IP by default.
 - Pushed file will delete in 600 sec(10 min) by default.
     - can change with env ``FILE_TTL`` (sec)
