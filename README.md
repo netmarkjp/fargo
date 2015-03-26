@@ -50,7 +50,7 @@ curl -OJ http://fargo.example.com:1236/get/<TOKEN>
 # Specification
 
 - Listen address/port is ``0.0.0.0:1236`` by default.
-    - can change with env ``ADDR`` *feature*
+    - can change with env ``FARGO_ADDR``
 - ``/token`` can access from ``127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16``
     - can change with env ``TOKEN_ALLOWED_FROM``
 - username/password for ``/token`` is ``fargo`` / ``fargo`` by default.

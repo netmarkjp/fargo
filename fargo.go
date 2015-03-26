@@ -29,6 +29,7 @@ func init() {
 	tokenAllowedFrom, _ := ParseNetworks("127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16")
 
 	config = &Config{
+		FargoAddr:        "0.0.0.0:1236",
 		FargoUser:        "fargo",
 		FargoPassword:    "fargo",
 		StoreDirectory:   "/tmp",
@@ -42,6 +43,7 @@ func init() {
 }
 
 type Config struct {
+	FargoAddr        string
 	FargoUser        string
 	FargoPassword    string
 	StoreDirectory   string
@@ -269,6 +271,9 @@ func main() {
 	}
 
 	config.Lock()
+	if envFargoAddr := os.Getenv("FARGO_ADDR"); envFargoAddr != "" {
+		config.FargoAddr = envFargoAddr
+	}
 	if envFargoUser := os.Getenv("FARGO_USER"); envFargoUser != "" {
 		config.FargoUser = envFargoUser
 	}
@@ -298,12 +303,9 @@ func main() {
 
 	go fileGC()
 
-	bind := "0.0.0.0:1236"
-
 	log.Debug("http server started")
-	log.Debug("bind: ", bind)
 
-	err = http.ListenAndServe(bind, nil)
+	err = http.ListenAndServe(config.FargoAddr, nil)
 	if err != nil {
 		log.Error(err)
 	}
