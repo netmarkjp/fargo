@@ -5,6 +5,14 @@ fargo
 
 fargo(Fast cARGO) is simple file copy daemon with HTTP.
 
+![overview](overview.png)
+
+- Push/Get file with using ``TOKEN``
+    - ``TOKEN`` automatically being invalid in 5 min
+    - ``TOKEN`` can generate only from allowed IP Address (default: Private IP Addresses)
+    - ``TOKEN`` require Basic Auth
+- Pushed file automatically removed in 10 min
+
 # Install
 
 ```
@@ -53,6 +61,6 @@ curl -OJ http://fargo.example.com:1236/get/<TOKEN>
 - ``TOKEN`` is expired in 5 min by default.
     - can change with env ``TOKEN_TTL`` (min) *feature*
 - If get file fail, locked 30 seconds from same IP by default.
-- Pushed file will delete in 600 sec(1h) by default.
+- Pushed file will delete in 600 sec(10 min) by default.
     - can change with env ``FILE_TTL`` (sec)
 
