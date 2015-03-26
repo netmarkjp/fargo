@@ -1,6 +1,8 @@
 fargo
 ==================
 
+[![wercker status](https://app.wercker.com/status/4ffab3cbd879cf0d3a2f90cc15e6a0cd/m "wercker status")](https://app.wercker.com/project/bykey/4ffab3cbd879cf0d3a2f90cc15e6a0cd)
+
 fargo(Fast cARGO) is simple file copy daemon with HTTP.
 
 # Install
