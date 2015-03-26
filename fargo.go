@@ -13,6 +13,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -25,12 +26,15 @@ var (
 
 func init() {
 
+	tokenAllowedFrom, _ := ParseNetworks("127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16")
+
 	config = &Config{
-		FargoUser:      "fargo",
-		FargoPassword:  "fargo",
-		StoreDirectory: "/tmp",
-		TokenTTL:       300,
-		FileTTL:        600,
+		FargoUser:        "fargo",
+		FargoPassword:    "fargo",
+		StoreDirectory:   "/tmp",
+		TokenAllowedFrom: tokenAllowedFrom,
+		TokenTTL:         300,
+		FileTTL:          600,
 	}
 
 	tokens = &Tokens{token: make(map[string]*Token)}
@@ -38,11 +42,12 @@ func init() {
 }
 
 type Config struct {
-	FargoUser      string
-	FargoPassword  string
-	StoreDirectory string
-	TokenTTL       int64 //sec
-	FileTTL        int64 //sec
+	FargoUser        string
+	FargoPassword    string
+	StoreDirectory   string
+	TokenAllowedFrom []*net.IPNet
+	TokenTTL         int64 //sec
+	FileTTL          int64 //sec
 	sync.Mutex
 }
 
@@ -64,6 +69,24 @@ type FailedIP struct {
 }
 
 func tokenHandler(w http.ResponseWriter, r *http.Request) {
+
+	// maybe TODO, think about X-Forwarded-For
+	tcpAddr, _ := net.ResolveTCPAddr("tcp", r.RemoteAddr)
+
+	allowed := false
+	for _, cidr := range config.TokenAllowedFrom {
+		if cidr.Contains(tcpAddr.IP) {
+			allowed = true
+		}
+	}
+
+	if !allowed {
+		log.Info("token access not allowed from ", tcpAddr.IP)
+		w.WriteHeader(403)
+		return
+
+	}
+
 	var newToken string
 	duplicated := true
 	for duplicated {
@@ -209,6 +232,19 @@ func StoreFilePath(token string) string {
 	return filepath
 }
 
+func ParseNetworks(description string) ([]*net.IPNet, error) {
+	var networks []*net.IPNet
+	for _, cidr := range strings.Split(description, ",") {
+		_, network, err := net.ParseCIDR(cidr)
+		if err != nil {
+			log.Fatal(err)
+			return nil, err
+		}
+		networks = append(networks, network)
+	}
+	return networks, nil
+}
+
 func main() {
 	var err error
 	log.SetOutput(os.Stderr)
@@ -224,6 +260,14 @@ func main() {
 	}
 
 	config.Lock()
+	if envTokenAllowedFrom := os.Getenv("TOKEN_ALLOWED_FROM"); envTokenAllowedFrom != "" {
+		networks, err := ParseNetworks(envTokenAllowedFrom)
+		if err != nil {
+			log.Fatal(err)
+			os.Exit(1)
+		}
+		config.TokenAllowedFrom = networks
+	}
 	if envFileTTL, err := strconv.ParseInt(os.Getenv("FILE_TTL"), 10, 64); err == nil && envFileTTL != 0 {
 		config.FileTTL = envFileTTL
 	}
