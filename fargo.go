@@ -29,6 +29,7 @@ func init() {
 	tokenAllowedFrom, _ := ParseNetworks("127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16")
 
 	config = &Config{
+		FargoAddr:        "0.0.0.0:1236",
 		FargoUser:        "fargo",
 		FargoPassword:    "fargo",
 		StoreDirectory:   "/tmp",
@@ -42,6 +43,7 @@ func init() {
 }
 
 type Config struct {
+	FargoAddr        string
 	FargoUser        string
 	FargoPassword    string
 	StoreDirectory   string
@@ -118,6 +120,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 	if _, exist := tokens.token[token]; !exist {
 		log.Warn("token not found.", token)
 		w.WriteHeader(404)
+		w.Write([]byte("[ERROR] 404 Not Found"))
 		return
 	}
 	if tokens.token[token].CreatedAt.Add(time.Duration(config.TokenTTL) * time.Second).Before(time.Now()) {
@@ -125,6 +128,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 		log.Debug("token:", tokens.token[token])
 		log.Debug("expired at:", tokens.token[token].CreatedAt.Add(time.Duration(config.TokenTTL)*time.Second))
 		w.WriteHeader(403)
+		w.Write([]byte("[ERROR] 403 Forbidden"))
 		return
 	}
 
@@ -132,6 +136,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error(err)
 		w.WriteHeader(500)
+		w.Write([]byte("[ERROR] 500 Internal Server Error"))
 		return
 	}
 	defer file.Close()
@@ -144,6 +149,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err)
 			w.WriteHeader(500)
+			w.Write([]byte("[ERROR] 500 Internal Server Error"))
 			return
 		}
 		defer out.Close()
@@ -152,6 +158,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err)
 			w.WriteHeader(500)
+			w.Write([]byte("[ERROR] 500 Internal Server Error"))
 			return
 		}
 	} else {
@@ -159,6 +166,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err)
 			w.WriteHeader(500)
+			w.Write([]byte("[ERROR] 500 Internal Server Error"))
 			return
 		}
 	}
@@ -176,6 +184,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		if val.Add(30 * time.Second).After(time.Now()) {
 			log.Warn("access denied for failed IP.")
 			w.WriteHeader(403)
+			w.Write([]byte("[ERROR] 403 Forbidden"))
 			return
 		}
 	}
@@ -190,6 +199,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		failedIP.Unlock()
 		log.Debug("failedIP:", failedIP)
 		w.WriteHeader(404)
+		w.Write([]byte("[ERROR] 404 Not Found"))
 		return
 	}
 	if tokens.token[token].CreatedAt.Add(time.Duration(config.TokenTTL) * time.Second).Before(time.Now()) {
@@ -198,6 +208,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		failedIP.ip[addr] = time.Now()
 		failedIP.Unlock()
 		w.WriteHeader(403)
+		w.Write([]byte("[ERROR] 403 Forbidden"))
 		return
 	}
 
@@ -269,6 +280,9 @@ func main() {
 	}
 
 	config.Lock()
+	if envFargoAddr := os.Getenv("FARGO_ADDR"); envFargoAddr != "" {
+		config.FargoAddr = envFargoAddr
+	}
 	if envFargoUser := os.Getenv("FARGO_USER"); envFargoUser != "" {
 		config.FargoUser = envFargoUser
 	}
@@ -286,6 +300,20 @@ func main() {
 	if envFileTTL, err := strconv.ParseInt(os.Getenv("FILE_TTL"), 10, 64); err == nil && envFileTTL != 0 {
 		config.FileTTL = envFileTTL
 	}
+	if envStoreDirectory := os.Getenv("STORE_DIR"); envStoreDirectory != "" {
+		if _, err := os.Stat(envStoreDirectory); err != nil {
+			err := os.Mkdir(envStoreDirectory, 0777)
+			if err != nil {
+				log.Fatal("cannot create ", envStoreDirectory, " : ", err)
+				os.Exit(1)
+			}
+		}
+
+		config.StoreDirectory = envStoreDirectory
+	}
+	if envTokenTTL, err := strconv.ParseInt(os.Getenv("TOKEN_TTL"), 10, 64); err == nil && envTokenTTL != 0 {
+		config.TokenTTL = envTokenTTL
+	}
 	config.Unlock()
 
 	log.Debug("config: ", pp.Sprint(config))
@@ -298,12 +326,9 @@ func main() {
 
 	go fileGC()
 
-	bind := "0.0.0.0:1236"
-
 	log.Debug("http server started")
-	log.Debug("bind: ", bind)
 
-	err = http.ListenAndServe(bind, nil)
+	err = http.ListenAndServe(config.FargoAddr, nil)
 	if err != nil {
 		log.Error(err)
 	}

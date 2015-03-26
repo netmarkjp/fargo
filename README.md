@@ -50,16 +50,16 @@ curl -OJ http://fargo.example.com:1236/get/<TOKEN>
 # Specification
 
 - Listen address/port is ``0.0.0.0:1236`` by default.
-    - can change with env ``ADDR`` *feature*
+    - can change with env ``FARGO_ADDR``
 - ``/token`` can access from ``127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16``
     - can change with env ``TOKEN_ALLOWED_FROM``
 - username/password for ``/token`` is ``fargo`` / ``fargo`` by default.
     - can change with env ``FARGO_USER`` and ``FARGO_PASSWORD``
 - File store directory is ``/tmp`` by default.
-    - can change with env ``STORE_DIR`` *feature*
+    - can change with env ``STORE_DIR``
 - ``TOKEN`` is UUIDv4
 - ``TOKEN`` is expired in 5 min by default.
-    - can change with env ``TOKEN_TTL`` (min) *feature*
+    - can change with env ``TOKEN_TTL`` (min)
 - If get file fail, locked 30 seconds from same IP by default.
 - Pushed file will delete in 600 sec(10 min) by default.
     - can change with env ``FILE_TTL`` (sec)
