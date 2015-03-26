@@ -19,10 +19,10 @@ go get github.com/netmarkjp/fargo
 
 ## Push file to server
 
-1.get token
+1.get token(can access only from TOKEN_ALLOWED_FROM)
 
 ```
-curl http://fargo.example.com:1236/token
+curl --user fargo:fargo http://fargo.example.com:1236/token
 ```
 
 2.push file
@@ -43,8 +43,8 @@ curl -OJ http://fargo.example.com:1236/get/<TOKEN>
     - can change with env ``ADDR`` *feature*
 - ``/token`` can access from ``127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16``
     - can change with env ``TOKEN_ALLOWED_FROM``
-- username/password for ``/token`` is ``fargo`` / ``fargo`` by default. *feature*
-    - can change with env ``FARGO_USER`` and ``FARGO_PASSWORD`` *feature*
+- username/password for ``/token`` is ``fargo`` / ``fargo`` by default.
+    - can change with env ``FARGO_USER`` and ``FARGO_PASSWORD``
 - File store directory is ``/tmp`` by default.
     - can change with env ``STORE_DIR`` *feature*
 - ``TOKEN`` is UUIDv4

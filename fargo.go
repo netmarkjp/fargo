@@ -83,8 +83,16 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	if !allowed {
 		log.Info("token access not allowed from ", tcpAddr.IP)
 		w.WriteHeader(403)
+		w.Write([]byte("[ERROR] 403 Forbidden"))
 		return
+	}
 
+	username, password, ok := r.BasicAuth()
+	if !(username == config.FargoUser && password == config.FargoPassword && ok) {
+		log.Info("token access not allowed with user \"", username, "\"")
+		w.WriteHeader(401)
+		w.Write([]byte("[ERROR] 401 Unauthorized"))
+		return
 	}
 
 	var newToken string
@@ -261,6 +269,12 @@ func main() {
 	}
 
 	config.Lock()
+	if envFargoUser := os.Getenv("FARGO_USER"); envFargoUser != "" {
+		config.FargoUser = envFargoUser
+	}
+	if envFargoPassword := os.Getenv("FARGO_PASSWORD"); envFargoPassword != "" {
+		config.FargoPassword = envFargoPassword
+	}
 	if envTokenAllowedFrom := os.Getenv("TOKEN_ALLOWED_FROM"); envTokenAllowedFrom != "" {
 		networks, err := ParseNetworks(envTokenAllowedFrom)
 		if err != nil {
