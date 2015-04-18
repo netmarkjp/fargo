@@ -15,9 +15,12 @@ fargo(Fast cARGO) is simple file copy daemon with HTTP.
 
 # Install
 
-```
-go get github.com/netmarkjp/fargo
-```
+1. visit Latest release download page
+    - [https://github.com/netmarkjp/fargo/releases/latest](https://github.com/netmarkjp/fargo/releases/latest)
+2. download zip for your system
+    - Linux x86_64 => ``linux_amd64.zip``
+3. unzip downloaded file
+    - ``unzip linux_amd64.zip``
 
 # Usage
 
@@ -32,19 +35,25 @@ go get github.com/netmarkjp/fargo
 1.get token(can access only from TOKEN_ALLOWED_FROM)
 
 ```
-curl --user fargo:fargo http://fargo.example.com:1236/token
+curl -v --user fargo:fargo http://fargo.example.com:1236/token
 ```
 
 2.push file
 
 ```
-curl -F file=@somefile http://fargo.example.com:1236/push/<TOKEN>
+curl -v -F file=@somefile http://fargo.example.com:1236/push/<TOKEN>
 ```
 
 ## Get file from server
 
 ```
-curl -OJ http://fargo.example.com:1236/get/<TOKEN>
+curl -v -o somefile http://fargo.example.com:1236/get/<TOKEN>
+```
+
+or Latest curl(on MacOSX), can preserve original filename with ``-J`` option.
+
+```
+curl -v -OJ http://fargo.example.com:1236/get/<TOKEN>
 ```
 
 # Help
