@@ -47,6 +47,18 @@ curl -F file=@somefile http://fargo.example.com:1236/push/<TOKEN>
 curl -OJ http://fargo.example.com:1236/get/<TOKEN>
 ```
 
+# Help
+
+```
+curl http://fargo.example.com:1236/
+```
+
+or
+
+```
+curl http://fargo.example.com:1236/help
+```
+
 # Specification
 
 - Listen address/port is ``0.0.0.0:1236`` by default.

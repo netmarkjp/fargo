@@ -70,6 +70,16 @@ type FailedIP struct {
 	sync.Mutex
 }
 
+func helpHandler(w http.ResponseWriter, r *http.Request) {
+	var body []string
+	body = append(body, fmt.Sprintf("1. curl --user fargo:fargo http://%s/token", config.FargoAddr))
+	body = append(body, fmt.Sprintf("2. curl -F file=@somefile http://%s/push/<TOKEN>", config.FargoAddr))
+	body = append(body, fmt.Sprintf("3. curl http://%s/get/<TOKEN>", config.FargoAddr))
+
+	w.WriteHeader(200)
+	w.Write([]byte(strings.Join(body, "\n")))
+}
+
 func tokenHandler(w http.ResponseWriter, r *http.Request) {
 
 	// maybe TODO, think about X-Forwarded-For
@@ -108,7 +118,9 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		tokens.Unlock()
 	}
-	w.Write([]byte(newToken))
+
+	pushURL := fmt.Sprintf("curl -F file=@somefile http://%s/push/%s", config.FargoAddr, newToken)
+	w.Write([]byte(pushURL))
 }
 
 func pushHandler(w http.ResponseWriter, r *http.Request) {
@@ -173,8 +185,10 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 
 	tokens.token[token].Filename = header.Filename
 	tokens.token[token].PushdAt = time.Now()
+
+	getURL := fmt.Sprintf("curl -o somefile http://%s/get/%s", config.FargoAddr, token)
 	w.WriteHeader(200)
-	w.Write([]byte(token))
+	w.Write([]byte(getURL))
 }
 
 func getHandler(w http.ResponseWriter, r *http.Request) {
@@ -319,9 +333,13 @@ func main() {
 	log.Debug("config: ", pp.Sprint(config))
 
 	r := mux.NewRouter()
+	r.HandleFunc("/token/", tokenHandler).Methods("GET")
 	r.HandleFunc("/token", tokenHandler).Methods("GET")
 	r.HandleFunc("/push/{token}", pushHandler).Methods("POST")
 	r.HandleFunc("/get/{token}", getHandler).Methods("GET")
+	r.HandleFunc("/help/", helpHandler).Methods("GET")
+	r.HandleFunc("/help", helpHandler).Methods("GET")
+	r.HandleFunc("/", helpHandler).Methods("GET")
 	http.Handle("/", r)
 
 	go fileGC()
