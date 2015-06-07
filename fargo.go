@@ -72,10 +72,27 @@ type FailedIP struct {
 
 func helpHandler(w http.ResponseWriter, r *http.Request) {
 	var body []string
-	body = append(body, fmt.Sprintf("1. curl --user fargo:fargo http://%s/token", config.FargoAddr))
-	body = append(body, fmt.Sprintf("2. curl -F file=@somefile http://%s/push/<TOKEN>", config.FargoAddr))
-	body = append(body, fmt.Sprintf("3. curl http://%s/get/<TOKEN>", config.FargoAddr))
+	body = append(body, "<html><head><title>fargo</title></head><body>")
+	body = append(body, "<ol>")
+	body = append(body, fmt.Sprintf("<li>curl --user fargo:fargo http://%s/token</li>", config.FargoAddr))
+	body = append(body, fmt.Sprintf("<li>curl -F file=@somefile http://%s/push/[TOKEN]</li>", config.FargoAddr))
+	body = append(body, fmt.Sprintf("<li>curl http://%s/get/[TOKEN]</li>", config.FargoAddr))
+	body = append(body, "</ol>")
+	body = append(body, "<ul>")
+	/*
+		for _, token := range tokens.token {
+			if token.Filename == "" {
+				continue
+			}
+			body = append(body, "<li>")
+			body = append(body, fmt.Sprintf("%s , will expire at %s", token.Filename, token.CreatedAt.Add(time.Duration(config.TokenTTL)*time.Second).Format("2006/1/2(Mon) 15:04:05 -0700 MST")))
+			body = append(body, "</li>")
+		}
+		body = append(body, "</ul>")
+	*/
+	body = append(body, "</body></html>")
 
+	w.Header().Add("Content-Type", "text/html; charset=UTF-8")
 	w.WriteHeader(200)
 	w.Write([]byte(strings.Join(body, "\n")))
 }
